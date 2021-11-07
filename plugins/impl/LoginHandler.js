@@ -118,7 +118,7 @@ class LoginHandler extends Plugin {
     				client.uuid = profile.id.replace(/(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})/, '$1-$2-$3-$4-$5');
     				client.username = profile.name;
     				client.textureProperties = profile.properties;
-                    client.entity = new Entity(client.uuid, client.username);
+                    client.entity = new Entity(client.uuid, client.username, { "x": 0, "y": 50, "z": 0 });
 
                     if (!this.getConfig().allowSamePlayerJoin) {
                         for (const id in this.getClients()) {
@@ -257,34 +257,34 @@ class LoginHandler extends Plugin {
                         });
                     }
 
+                    const chunk = new PChunk();
+
+                    for (let x = 0; x < 16; x++) {
+                        for (let z = 0; z < 16; z++) {
+                            chunk.setBlockType(new Vec3(x, 5, z), 8);
+                            chunk.setBlockData(new Vec3(x, 5, z), 1);
+                            chunk.setBlockStateId(new Vec3(x, 4, z), 10);
+                            chunk.setBlockStateId(new Vec3(x, 3, z), 10);
+                            chunk.setBlockType(new Vec3(x, 2, z), 25);
+
+                            for (let y = 0; y < 256; y++) {
+                                chunk.setSkyLight(new Vec3(x, y, z), 15);
+                            }
+                        }
+                    }
+
+                    const WorldSurfaceNBT = NBT.writeUncompressed({
+                        "type": "compound",
+                        "name": "",
+                        "value": {}
+                    });
+
+                    const mask = chunk.getMask();
+                    const biomes = chunk.dumpBiomes();
+                    const chunkData = chunk.dump();
+
                     for (let chunkX = -10; chunkX < chunkArea; chunkX++) {
                         for (let chunkZ = -10; chunkZ < chunkArea; chunkZ++) {
-                            const chunk = new PChunk();
-
-                            for (let x = 0; x < 16; x++) {
-                                for (let z = 0; z < 16; z++) {
-                                    chunk.setBlockType(new Vec3(x, 5, z), 8);
-                                    chunk.setBlockData(new Vec3(x, 5, z), 1);
-                                    chunk.setBlockStateId(new Vec3(x, 4, z), 10);
-                                    chunk.setBlockStateId(new Vec3(x, 3, z), 10);
-                                    chunk.setBlockType(new Vec3(x, 2, z), 25);
-
-                                    for (let y = 0; y < 256; y++) {
-                                        chunk.setSkyLight(new Vec3(x, y, z), 15);
-                                    }
-                                }
-                            }
-
-                            const WorldSurfaceNBT = {
-                                "type": "compound",
-                                "name": "",
-                                "value": {}
-                            }
-
-                            const mask = chunk.getMask();
-                            const biomes = chunk.dumpBiomes();
-                            const chunkData = chunk.dump();
-
                             const ChunkPacket = new PacketBuilder();
 
                             ChunkPacket.writeVarInt(0x22);
@@ -293,7 +293,7 @@ class LoginHandler extends Plugin {
                             ChunkPacket.writeVarInt(mask.length);
                             ChunkPacket.write32(mask[0][0]);
                             ChunkPacket.write32(mask[0][1]);
-                            ChunkPacket.writeBytes(NBT.writeUncompressed(WorldSurfaceNBT));
+                            ChunkPacket.writeBytes(WorldSurfaceNBT);
                             ChunkPacket.writeVarInt(biomes.length);
 
                             biomes.forEach(biome => {

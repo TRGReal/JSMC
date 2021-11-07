@@ -111,6 +111,8 @@ const server = net.createServer(socket => {
 
 					break;
 			}
+
+			console.log(err);
 		}
 	});
 

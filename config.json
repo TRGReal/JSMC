@@ -16,6 +16,6 @@
 		"leaveMessage": "§e%player% left the game"
 	},
     "debug": true,
-    "allowSamePlayerJoin": true,
-	"port": 25565
+    "allowSamePlayerJoin": false,
+	"port": 9976
 }

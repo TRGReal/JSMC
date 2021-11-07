@@ -35,7 +35,7 @@ class KeepAliveHandler extends Plugin {
     }
 
     onKeepAlive(client) {
-        if (client.sendKeepAliveTime) client.latency = new Date().getTime() - client.keepAlive.sendKeepAliveTime;
+        if (client.keepAlive.sendKeepAliveTime) client.latency = new Date().getTime() - client.keepAlive.sendKeepAliveTime;
 
         client.keepAlive.lastKeepAlive = new Date().getTime();
 
