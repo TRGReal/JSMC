@@ -1,0 +1,21 @@
+{
+    "status": {
+        "maxPlayers": -1,
+        "showSampleList": true,
+        "motd": "\u00A7x\u00A75\u00A7e\u00A72\u00A74\u00A70\u00A70test",
+        "shouldUseFavIcon": false
+    },
+	"lan": {
+		"shouldUse": true,
+		"motdMessage": "§c§lThis is a JSMC server."
+	},
+	"chat": {
+		"chatPrefix": "<%player%> ",
+		"allowChatColour": true,
+		"joinMessage": "§e%player% joined the game",
+		"leaveMessage": "§e%player% left the game"
+	},
+    "debug": true,
+    "allowSamePlayerJoin": true,
+	"port": 25565
+}
