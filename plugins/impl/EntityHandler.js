@@ -48,7 +48,9 @@ class EntityHandler extends Plugin {
                 for (var eClientID in clients) {
                     const eClient = clients[eClientID];
 
-                    eClient.socket.write(EntityMetadata.getResult());
+                    if (eClient.state === "GAME") {
+                        eClient.socket.write(EntityMetadata.getResult());
+                    }
                 }
 
                 break;
