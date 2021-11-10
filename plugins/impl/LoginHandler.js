@@ -140,6 +140,13 @@ class LoginHandler extends Plugin {
 
     				this.getLogUtils().debug("Finished encryption for " + client.username + ", sending login success.");
 
+					const SetCompression = new PacketBuilder();
+					
+					SetCompression.writeVarInt(0x03);
+					SetCompression.writeVarInt(client.compressionThreshold);
+					
+					client.socket.write(SetCompression.getResult());
+
     				const LoginSuccess = new PacketBuilder();
 
     				LoginSuccess.writeVarInt(0x02);
