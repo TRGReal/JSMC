@@ -118,7 +118,7 @@ class LoginHandler extends Plugin {
     				client.uuid = profile.id.replace(/(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})/, '$1-$2-$3-$4-$5');
     				client.username = profile.name;
     				client.textureProperties = profile.properties;
-                    client.entity = new Entity(client.uuid, client.username, { "x": 0, "y": 50, "z": 0 });
+                    client.entity = new Entity(client.uuid, client.username, { "x": 0, "y": 6, "z": 0, "yaw": 0, "pitch": 0 });
 
                     if (!this.getConfig().allowSamePlayerJoin) {
                         for (const id in this.getClients()) {
@@ -237,7 +237,7 @@ class LoginHandler extends Plugin {
 
                     PlayerPositionLook.writeVarInt(0x38);
                     PlayerPositionLook.writeDouble(0); // X
-                    PlayerPositionLook.writeDouble(50); // Y
+                    PlayerPositionLook.writeDouble(6); // Y
                     PlayerPositionLook.writeDouble(0); // Z
                     PlayerPositionLook.writeFloat32(0); // Yaw
                     PlayerPositionLook.writeFloat32(0); // Pitch

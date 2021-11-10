@@ -97,6 +97,24 @@ class PacketProcessor {
                 break;
             case States.GAME:
                 switch (packetId) {
+                    case 0x01:
+                        {
+                            const teleportID = wrapped.readVarInt();
+
+                            packetName = "teleport_confirm";
+                            packetData = { teleportID };
+                        }
+
+                        break;
+                    case 0x02:
+                        {
+                            const newDifficulty = wrapped.read8();
+
+                            packetName = "set_difficulty";
+                            packetData = { newDifficulty };
+                        }
+                        
+                        break;
 					case 0x03:
     					{
     						const message = wrapped.readString();
@@ -106,6 +124,15 @@ class PacketProcessor {
     					}
 
     					break;
+                    case 0x04:
+                        {
+                            const actionId = wrapped.readVarInt();
+
+                            packetName = "client_status";
+                            packetData = { actionId };
+                        }
+
+                        break;
                     case 0x05:
                         {
                             const locale = wrapped.readString();
@@ -118,6 +145,48 @@ class PacketProcessor {
 
                             packetName = "settings";
                             packetData = { locale, viewDistance, chatMode, chatColors, displayedSkinParts, mainHand, disableTextFiltering };
+                        }
+
+                        break;
+                    case 0x06:
+                        {
+                            const transactionId = wrapped.readVarInt();
+                            const text = wrapped.readString(); // max len: 32500
+
+                            packetName = "tab_complete";
+                            packetData = { transactionId, text };
+                        }
+
+                        break;
+                    case 0x0A:
+                        {
+                            const channel = wrapped.readString();
+                            const data = wrapped.readBytes(wrapped.buf - wrapped.cursor); // read remaining bytes
+
+                            packetName = "plugin_message";
+                            packetData = { channel, data };
+                        }
+
+                        break;
+                    case 0x0D:
+                        {
+                            const entityId = wrapped.readVarInt();
+                            const type = wrapped.readVarInt();
+
+                            let targetX, targetY, targetZ, hand;
+
+                            if (type === 0) {
+                                targetX = wrapped.readFloat32();
+                                targetY = wrapped.readFloat32();
+                                targetZ = wrapped.readFloat32();
+                            }
+
+                            if (type === 0 || type === 2) hand = wrapped.readVarInt();
+
+                            const sneaking = wrapped.readBoolean();
+
+                            packetName = "interact_entity";
+                            packetData = { entityId, type, targetX, targetY, targetZ, hand, sneaking };
                         }
 
                         break;
@@ -196,6 +265,26 @@ class PacketProcessor {
 
                             packetName = "keep_alive";
                             packetData = { keepAliveId };
+                        }
+
+                        break;
+                    case 0x1B:
+                        {
+                            const entityId = wrapped.readVarInt();
+                            const actionId = wrapped.readVarInt();
+                            const jumpBoost = wrapped.readVarInt();
+
+                            packetName = "entity_action";
+                            packetData = { entityId, actionId, jumpBoost };
+                        }
+
+                        break;
+                    case 0x2C:
+                        {
+                            const hand = wrapped.readVarInt();
+
+                            packetName = "animation";
+                            packetData = { hand };
                         }
 
                         break;

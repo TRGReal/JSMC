@@ -82,10 +82,10 @@ const server = net.createServer(socket => {
 				LogUtils.debug("Registed client AES decipher for " + client.username + ", now forwarding packets.");
 			}
 
-			if (!client.encryption.shouldEncrypt) {
-				handleIncomingData(data, client);
-			} else {
+			if (client.encryption.shouldEncrypt) {
 				client.encryption.decipher.write(data);
+			} else {
+				handleIncomingData(data, client);
 			}
 		} catch (err) {
 			switch (client.state) {

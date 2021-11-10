@@ -12,6 +12,9 @@ class Entity {
     #lastX;
     #lastY;
     #lastZ;
+    #onFire;
+    #sneaking;
+    #sprinting;
 
     constructor(uuid, name, spawnPosition) {
         this.#uuid = uuid;
@@ -25,6 +28,14 @@ class Entity {
         this.#lastX = spawnPosition.x;
         this.#lastY = spawnPosition.y;
         this.#lastZ = spawnPosition.z;
+
+        this.#yaw = spawnPosition.yaw;
+        this.#pitch = spawnPosition.pitch;
+
+        this.#onFire = false;
+
+        this.#sneaking = false;
+        this.#sprinting = false;
     }
 
     getName() {
@@ -59,7 +70,7 @@ class Entity {
     }
 
     getLastPosition() {
-        return { "lastX": this.#lastX, "lastY": this.#lastY, "lastZ": this.#lastZ };
+        return { "x": this.#lastX, "y": this.#lastY, "z": this.#lastZ };
     }
 
     getAngle() {
@@ -86,6 +97,30 @@ class Entity {
 
     resetUpdateTotal() {
         this.#totalUpdates = [];
+    }
+
+    isOnFire() {
+        return this.#onFire;
+    }
+
+    setOnFire(type) {
+        this.#onFire = type;
+    }
+
+    setSneaking(type) {
+        this.#sneaking = type;
+    }
+
+    setSprinting(type) {
+        this.#sprinting = type;
+    }
+
+    isSneaking() {
+        return this.#sneaking;
+    }
+
+    isSprinting() {
+        return this.#sprinting;
     }
 
 }

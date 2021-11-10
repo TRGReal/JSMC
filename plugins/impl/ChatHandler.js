@@ -20,23 +20,20 @@ class ChatHandler extends Plugin {
 
 				ChatMessage.writeVarInt(0x0F);
 
-				const chatPrefix = this.getConfig().chat.chatPrefix.replace("%player%", client.username);
+				const builtMessage = new PChat.MessageBuilder();
+				builtMessage.setTranslate("chat.type.text");
+				
+				const usernameWith = new PChat.MessageBuilder();
+				usernameWith.setText(client.username);
+				usernameWith.setClickEvent("suggest_command", "/msg " + client.username + " ");
+				usernameWith.setInsertion(client.username);
 
-				if (this.getConfig().chat.allowChatColour) {
-					const builtMessage = PChat.MessageBuilder.fromString(chatPrefix + data.message);
+				const messageWith = this.getConfig().chat.allowChatColour ? PChat.MessageBuilder.fromString(data.message) : new PChat.MessageBuilder().setText(data.message);
 
-					ChatMessage.writeString(JSON.stringify(builtMessage.toJSON()));
-				} else {
-					const builtMessage = PChat.MessageBuilder.fromString(chatPrefix);
-					const extraMessage = new PChat.MessageBuilder();
+				builtMessage.addWith(usernameWith);
+				builtMessage.addWith(messageWith);
 
-					extraMessage.setText(data.message);
-
-					builtMessage.addExtra(extraMessage);
-
-					ChatMessage.writeString(JSON.stringify(builtMessage.toJSON()));
-				}
-
+				ChatMessage.writeString(JSON.stringify(builtMessage.toJSON()));
 				ChatMessage.write8(0);
 				ChatMessage.writeUUID(client.uuid);
 
@@ -44,28 +41,13 @@ class ChatHandler extends Plugin {
 					const bClient = this.getClients()[bClientID];
 
 					if (bClient.state === "GAME") {
-						bClient.socket.write(ChatMessage.getResult());
+						if (bClient.settings.chatMode === 0) {
+							bClient.socket.write(ChatMessage.getResult());
+						}
 					}
 				}
 			} else {
 				if (data.message === "/totemtest") {
-					const TotemPacket = new PacketBuilder();
-
-					TotemPacket.writeVarInt(0x24);
-
-					TotemPacket.write32(52);
-					TotemPacket.writeBoolean(false);
-					TotemPacket.writeDouble(0);
-					TotemPacket.writeDouble(5);
-					TotemPacket.writeDouble(0);
-					TotemPacket.writeFloat32(0);
-					TotemPacket.writeFloat32(0);
-					TotemPacket.writeFloat32(0);
-					TotemPacket.writeFloat32(0);
-					TotemPacket.write32(1);
-
-					client.socket.write(TotemPacket.getResult());
-
 					const EntityStatus = new PacketBuilder();
 
 					EntityStatus.writeVarInt(0x1B);
@@ -73,7 +55,32 @@ class ChatHandler extends Plugin {
 					EntityStatus.write32(client.id);
 					EntityStatus.write8(35);
 
-					client.socket.write(TotemPacket.getResult());
+					client.socket.write(EntityStatus.getResult());
+				} else if (data.message === "/advancementtest") {
+					const ChatMessage = new PacketBuilder();
+
+					const BuiltMessage = new PChat.MessageBuilder();
+
+					BuiltMessage.setTranslate("chat.type.advancement.task");
+
+					const AdvancementWith = new PChat.MessageBuilder();
+
+					AdvancementWith.setInsertion(client.username);
+					AdvancementWith.setText(client.username);
+
+					const TextWith = new PChat.MessageBuilder();
+
+					TextWith.setTranslate("achievement.openInventory");
+
+					BuiltMessage.addWith(AdvancementWith);
+					BuiltMessage.addWith(TextWith);
+
+					ChatMessage.writeVarInt(0x0F);
+					ChatMessage.writeString(JSON.stringify(BuiltMessage.toJSON()));
+					ChatMessage.write8(0);
+					ChatMessage.writeUUID("00000000-0000-0000-0000-000000000000");
+
+					client.socket.write(ChatMessage.getResult());
 				}
 			}
 		}
@@ -83,10 +90,20 @@ class ChatHandler extends Plugin {
 		const PacketBuilder = this.getPacketBuilder();
 		const ChatMessage = new PacketBuilder();
 
-		const message = PChat.MessageBuilder.fromString(this.getConfig().chat.leaveMessage.replace("%player%", client.username));
+		const builtMessage = new PChat.MessageBuilder();
+
+		builtMessage.setTranslate("multiplayer.player.quit");
+		builtMessage.setColor("yellow");
+
+		const usernameWith = new PChat.MessageBuilder();
+
+		usernameWith.setInsertion(client.username);
+		usernameWith.setText(client.username);
+
+		builtMessage.addWith(usernameWith);
 
 		ChatMessage.writeVarInt(0x0F);
-		ChatMessage.writeString(JSON.stringify(message));
+		ChatMessage.writeString(JSON.stringify(builtMessage.toJSON()));
 		ChatMessage.write8(0);
 		ChatMessage.writeUUID("00000000-0000-0000-0000-000000000000");
 
@@ -103,10 +120,40 @@ class ChatHandler extends Plugin {
 		const PacketBuilder = this.getPacketBuilder();
 		const ChatMessage = new PacketBuilder();
 
-		const message = PChat.MessageBuilder.fromString(this.getConfig().chat.joinMessage.replace("%player%", client.username));
+		const builtMessage = new PChat.MessageBuilder();
+
+		// {
+		// 	"translate": "chat.type.text",
+		// 	"with": [
+		// 		{
+		// 			"text":"Herobrine",
+		// 			"clickEvent": {
+		// 				"action": "suggest_command",
+		// 				"value":"/msg Herobrine "
+		// 			},
+		// 			"hoverEvent": {
+		// 				"action":"show_entity",
+		// 				"value": "{id:f84c6a79-0a4e-45e0-879b-cd49ebd4c4e2,name:Herobrine}"
+		// 			},
+		// 			"insertion": "Herobrine"
+		// 		},
+		// 		{
+		// 			"text": "I don't exist"
+		// 		}]
+		// 	}
+
+		builtMessage.setTranslate("multiplayer.player.joined");
+		builtMessage.setColor("yellow");
+
+		const usernameWith = new PChat.MessageBuilder();
+
+		usernameWith.setInsertion(client.username);
+		usernameWith.setText(client.username);
+
+		builtMessage.addWith(usernameWith);
 
 		ChatMessage.writeVarInt(0x0F);
-		ChatMessage.writeString(JSON.stringify(message));
+		ChatMessage.writeString(JSON.stringify(builtMessage.toJSON()));
 		ChatMessage.write8(0);
 		ChatMessage.writeUUID("00000000-0000-0000-0000-000000000000");
 

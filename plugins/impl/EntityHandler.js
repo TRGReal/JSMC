@@ -81,6 +81,41 @@ class EntityHandler extends Plugin {
                 client.entity.updateTotal("ground");
 
                 break;
+            case "entity_action":
+                switch (data.actionId) {
+                    case 0:
+                        client.entity.setSneaking(true);
+                        break;
+                    case 1:
+                        client.entity.setSneaking(false);
+                        break;
+                    case 3:
+                        client.entity.setSprinting(true);
+                        break;
+                    case 4:
+                        client.entity.setSprinting(false);
+                        break;
+                }
+
+                client.entity.updateTotal("metadata");
+
+                break;
+            case "animation":
+                const AnimationPacket = new PacketBuilder();
+
+                AnimationPacket.writeVarInt(0x06);
+                AnimationPacket.writeVarInt(client.id);
+                AnimationPacket.writeU8(data.hand === 0 ? 0 : 3); // Translate Entity Animation ID
+
+                for (const bClientID in this.getClients()) {
+                    const bClient = this.getClients()[bClientID];
+
+                    if (bClient.state === "GAME" && bClient.id !== client.id) {
+                        bClient.socket.write(AnimationPacket.getResult());
+                    }
+                }
+                
+                break;
         }
     }
 
@@ -90,19 +125,18 @@ class EntityHandler extends Plugin {
         for (const lClientID in this.getClients()) {
             const lClient = this.getClients()[lClientID];
 
-            if (lClient.state === "GAME" && lClient.entity.getUpdateTotal().length > 0) {
+            if (lClient.state === "GAME" && Object.keys(lClient.entity.getUpdateTotal()).length > 1) {
                 const PacketQueue = [];
 
                 Object.keys(lClient.entity.getUpdateTotal()).forEach(update => {
                     switch (update) {
                         case "position":
                             {
-                                const PositionPacket = new PacketBuilder();
-
                                 const lP = lClient.entity.getLastPosition();
                                 const nP = lClient.entity.getPosition();
 
-                                if ((nP.x - lP.x) > 8) {
+                                // Send an Entity Teleport if the total distance is more than 8 or no change (for precision due to other positions being relative).
+                                if (((nP.x - lP.x) > 8 || (nP.y - lP.y) > 8 || (nP.z - lP.z) > 8) || ((nP.x - lP.x) === 0 || (nP.y - lP.y) === 0 || (nP.z - lP.z) === 0)) {
                                     const EntityTeleport = new PacketBuilder();
 
                                     const angle = lClient.entity.getAngle();
@@ -118,6 +152,8 @@ class EntityHandler extends Plugin {
 
                                     PacketQueue.push(EntityTeleport.getResult());
                                 } else {
+                                    const PositionPacket = new PacketBuilder();
+
                                     PositionPacket.writeVarInt(0x29);
                                     PositionPacket.writeVarInt(lClient.id);
                                     PositionPacket.write16((nP.x * 32 - lP.x * 32) * 128);
@@ -132,8 +168,6 @@ class EntityHandler extends Plugin {
                             break;
                         case "position_angle":
                             {
-                                const PositionRotationPacket = new PacketBuilder();
-
                                 const lP = lClient.entity.getLastPosition();
                                 const nP = lClient.entity.getPosition();
                                 const angle = lClient.entity.getAngle();
@@ -154,8 +188,10 @@ class EntityHandler extends Plugin {
 
                                     PacketQueue.push(EntityTeleport.getResult());
                                 } else {
+                                    const PositionRotationPacket = new PacketBuilder();
+
                                     PositionRotationPacket.writeVarInt(0x2A);
-                                    PositionRotationPacket.writeVarInt(client.id);
+                                    PositionRotationPacket.writeVarInt(lClient.id);
                                     PositionRotationPacket.write16((nP.x * 32 - lP.x * 32) * 128);
                                     PositionRotationPacket.write16((nP.y * 32 - lP.y * 32) * 128);
                                     PositionRotationPacket.write16((nP.z * 32 - lP.z * 32) * 128);
@@ -172,7 +208,7 @@ class EntityHandler extends Plugin {
                             {
                                 const RotationPacket = new PacketBuilder();
 
-                                const angle = client.entity.getAngle();
+                                const angle = lClient.entity.getAngle();
 
                                 RotationPacket.writeVarInt(0x2B);
                                 RotationPacket.writeVarInt(lClient.id);
@@ -184,12 +220,34 @@ class EntityHandler extends Plugin {
                             }
 
                             break;
+                        case "metadata":
+                            {
+                                const EntityMetadata = new PacketBuilder();
+
+                                EntityMetadata.writeVarInt(0x4D);
+                                EntityMetadata.writeVarInt(lClient.id);
+                                
+                                // Entity Info Bitmask
+                                let FlagBitmask = 0;
+
+                                if (lClient.entity.isOnFire()) FlagBitmask |= 0x01;
+                                if (lClient.entity.isSneaking()) FlagBitmask |= 0x02;
+                                if (lClient.entity.isSprinting()) FlagBitmask |= 0x08;
+
+                                EntityMetadata.writeU8(0);
+                                EntityMetadata.writeVarInt(0);
+                                EntityMetadata.write8(FlagBitmask);
+
+                                EntityMetadata.writeU8(0xff);
+
+                                PacketQueue.push(EntityMetadata.getResult());
+                            }
+
+                            break;
                     }
                 });
 
-                lClient.resetUpdateTotal();
-
-                console.log(PacketQueue);
+                lClient.entity.resetUpdateTotal();
 
                 for (const bClientID in this.getClients()) {
                     const bClient = this.getClients()[bClientID];
