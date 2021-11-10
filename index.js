@@ -11,6 +11,7 @@ const States = { "HANDSHAKING": "HANDSHAKING", "STATUS": "STATUS", "LOGIN": "LOG
 const config = require('./config.json');
 const LogUtils = require('./utils/logs/LogUtils.js')(config.debug);
 const Packet = require("./utils/packet/Packet.js");
+const RawOutboundPacket = require("./utils/packet/RawOutboundPacket.js");
 
 LogUtils.info("Starting Minecraft server...");
 LogUtils.info("Generating keypair (1024-bit).");
@@ -53,6 +54,8 @@ const server = net.createServer(socket => {
 		"shouldRegisterDecipher": false
 	};
 	client.disconnected = false;
+	client.compressionThreshold = config.compressionThreshold;
+	client.compressionEnabled = false;
 
 	clientIDRef[client.id] = client;
 
@@ -60,10 +63,12 @@ const server = net.createServer(socket => {
 	socket.realWrite = socket.write;
 	socket.write = buffer => {
 		if (!client.disconnected) {
-			if (client.encryption.shouldEncrypt) {
-				client.encryption.cipher.write(buffer);
-			} else {
-				socket.realWrite(buffer);
+			const packet = new RawOutboundPacket(buffer, client);
+			
+			PluginLoader.onPreWrite(packet);
+			
+			if (!packet.isCancelled()) {
+				socket.realWrite(packet.getData());
 			}
 		}
 	}

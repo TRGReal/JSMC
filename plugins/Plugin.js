@@ -92,6 +92,10 @@ class Plugin {
     onTick() {
         
     }
+	
+	onPreWrite() {
+	
+	}
 
 }
 

@@ -85,6 +85,12 @@ class PluginLoader {
 
         this.#lastTickTime = new Date().getTime();
     }
+	
+	onPreWrite(packet) {
+		this.#plugins.forEach(plugin => {
+			plugin.onPreWrite(packet);
+		});
+	}
 
 }
 

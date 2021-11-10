@@ -16,16 +16,17 @@ class CompressorIntercept extends Plugin {
 	
 	onPreWrite(packet) {
 		const PacketBuilder = this.getPacketBuilder();
-		const client = packet.getClient();
 		const data = packet.getData();
+		const client = packet.getClient();
 		
-		if (client.compressionThreshold > 0) {
+		if (client.compressionThreshold > 0 && client.compressionEnabled) {
+			console.log("compressing");
 			const NewPacket = new PacketBuilder();
 			
 			NewPacket.writeVarInt(data.length);
 			NewPacket.writeBytes(zlib.deflateSync(data, {
 				"level": zlib.constants.Z_BEST_COMPRESSION
-			});
+			}));
 			
 			packet.setData(NewPacket.getResult());
 		}

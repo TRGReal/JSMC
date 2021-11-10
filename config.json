@@ -17,5 +17,6 @@
 	},
     "debug": true,
     "allowSamePlayerJoin": false,
-	"port": 9976
+	"port": 25565,
+	"compressionThreshold": 256
 }

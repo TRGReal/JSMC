@@ -146,6 +146,7 @@ class LoginHandler extends Plugin {
 					SetCompression.writeVarInt(client.compressionThreshold);
 					
 					client.socket.write(SetCompression.getResult());
+					client.compressionEnabled = true;
 
     				const LoginSuccess = new PacketBuilder();
 
