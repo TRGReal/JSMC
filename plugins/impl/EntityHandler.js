@@ -342,9 +342,9 @@ class EntityHandler extends Plugin {
                 SpawnPlayer.writeVarInt(0x04);
                 SpawnPlayer.writeVarInt(entity.id);
                 SpawnPlayer.writeUUID(entity.uuid);
-                SpawnPlayer.writeDouble(Math.floor(position.x * 32));
-                SpawnPlayer.writeDouble(Math.floor(position.y * 32));
-                SpawnPlayer.writeDouble(Math.floor(position.z * 32));
+                SpawnPlayer.writeDouble(position.x);
+                SpawnPlayer.writeDouble(position.y);
+                SpawnPlayer.writeDouble(position.z);
                 SpawnPlayer.write8(Math.floor(angle.yaw));
                 SpawnPlayer.write8(Math.floor(angle.pitch));
 
