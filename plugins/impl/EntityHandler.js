@@ -63,14 +63,14 @@ class EntityHandler extends Plugin {
                 break;
             case "player_position_look":
                 client.entity.setPosition(data.x, data.y, data.z);
-                client.entity.setAngle(data.yaw, data.pitch);
+                client.entity.setAngle(data.yaw % 360, data.pitch);
                 client.entity.setGround(data.onGround);
                 client.entity.updateTotal("position_angle");
                 client.entity.updateTotal("ground");
 
                 break;
             case "player_rotation":
-                client.entity.setAngle(data.yaw, data.pitch);
+                client.entity.setAngle(data.yaw % 360, data.pitch);
                 client.entity.setGround(data.onGround);
                 client.entity.updateTotal("angle");
                 client.entity.updateTotal("ground");
@@ -333,6 +333,7 @@ class EntityHandler extends Plugin {
 
             // Entity Spawn Handler
             entities.forEach(entity => {
+				console.log(entity.username);
                 const SpawnPlayer = new PacketBuilder();
 
                 const position = entity.entity.getPosition();
@@ -341,13 +342,11 @@ class EntityHandler extends Plugin {
                 SpawnPlayer.writeVarInt(0x04);
                 SpawnPlayer.writeVarInt(entity.id);
                 SpawnPlayer.writeUUID(entity.uuid);
-                SpawnPlayer.writeDouble(position.x);
-                SpawnPlayer.writeDouble(position.y);
-                SpawnPlayer.writeDouble(position.z);
-                SpawnPlayer.write8(angle.yaw ?? 0);
-                SpawnPlayer.write8(angle.pitch ?? 0);
-
-                console.log(SpawnPlayer.getResult());
+                SpawnPlayer.writeDouble(Math.floor(position.x * 32));
+                SpawnPlayer.writeDouble(Math.floor(position.y * 32));
+                SpawnPlayer.writeDouble(Math.floor(position.z * 32));
+                SpawnPlayer.write8(Math.floor(angle.yaw));
+                SpawnPlayer.write8(Math.floor(angle.pitch));
 
                 client.socket.write(SpawnPlayer.getResult());
             });
