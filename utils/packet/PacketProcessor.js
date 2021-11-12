@@ -158,6 +158,43 @@ class PacketProcessor {
                         }
 
                         break;
+					case 0x07:
+						{
+							const windowId = wrapped.read8();
+							const buttonId = wrapped.read8();
+							
+							packetName = "click_window_button";
+							packetData = { windowId, buttonId };
+						}					
+					
+						break;
+					// case 0x08:
+						// {
+							// const windowId = wrapped.readU8();
+							// const stateId = wrapped.readVarInt();
+							// const slot = wrapped.read16();
+							// const button = wrapped.read8();
+							// const mode = wrapped.readVarInt();
+							// const slots = [];
+							
+							// const arrLength = wrapped.readVarInt();
+							// for (let i = 0; i < arrLength; i++) {
+								// slots.push({
+									// "slot_number": 
+								// });
+							// }
+						// }
+					
+						// break;
+					case 0x09:
+						{
+							const windowId = wrapped.read8();
+							
+							packetName = "close_window";
+							packetData = { windowId };
+						}
+					
+						break;
                     case 0x0A:
                         {
                             const channel = wrapped.readString();
@@ -168,6 +205,35 @@ class PacketProcessor {
                         }
 
                         break;
+					case 0x0B:
+						{
+							const hand = wrapped.readVarInt();
+							const entries = [];
+							
+							const arrLength = wrapped.readVarInt();
+							for (let i = 0; i < arrLength; i++) {
+								entries.push(wrapped.readString());
+							}
+							
+							const hasTitle = wrapped.readBoolean();
+							let title;
+							if (hasTitle) title = wrapped.readString();
+							
+							packetName = "edit_book";
+							packetData = { hand, entries, hasTitle, title };
+						}
+						
+						break;
+					case 0x0C:
+						{
+							const transactionId = wrapped.readVarInt();
+							const entityId = wrapped.readVarInt();
+							
+							packetName = "query_entity_nbt";
+							packetData = { transactionId, entityId };
+						}
+					
+						break;
                     case 0x0D:
                         {
                             const entityId = wrapped.readVarInt();

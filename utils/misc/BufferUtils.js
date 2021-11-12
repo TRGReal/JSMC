@@ -95,6 +95,14 @@ class BufferUtils {
 		this.cursor += 8;
 		return double;
 	}
+	
+	readULong(isBigEndian = true) {
+		const uDouble = this.buf[isBigEndian ? "readBigUInt64BE" : "readBigUInt64LE"](
+			this.cursor
+		);
+		this.cursor += 8;
+		return uDouble;
+	}
 
 	readVarInt() {
 		let readMore = true;
@@ -252,6 +260,18 @@ class BufferUtils {
 		this.cursor += 8;
 		return temp;
 	}
+	
+	writeULong(value, isBigEndian = true) {
+		this.#resizeBuffer(8);
+		let temp;
+		if (isBigEndian) {
+			temp = this.buf.writeBigUInt64BE(BigInt(value), this.cursor);
+		} else {
+			temp = this.buf.writeBigUInt64LE(BigInt(value), this.cursor);
+		}
+		this.cursor += 8;
+		return temp;
+	}
 
 	writeVarInt(value) {
 		this.writeVarUInt(value >>> 0);
@@ -279,6 +299,31 @@ class BufferUtils {
 		const parsed = Buffer.from(UUID.parse(uuid));
 
 		this.writeBytes(parsed);
+	}
+	
+	readUUID(uuid) {
+		// i don't know if this works but it should
+		return UUID.parse(this.readBytes(16).toString("hex"));
+	}
+	
+	writePosition(x, y, z) {
+		this.writeLong(((x & 0x3FFFFFF) << 38) | ((z & 0x3FFFFFF) << 12) | (y & 0xFFF));
+	}
+	
+	readPosition(useOffset = false) {
+		const value = this.readULong();
+		
+		let x = value >> 38;
+		let y = value & 0xFFF;
+		let z = (val << 26 >> 38);
+		
+		if (useOffset) {
+			if (x >= 2^25) { x -= 2^26 }
+			if (y >= 2^11) { y -= 2^12 }
+			if (z >= 2^25) { z -= 2^26 }
+		}
+		
+		return { x, y, z };
 	}
 
 	writeBytes(bytes) {

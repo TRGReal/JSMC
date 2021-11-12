@@ -244,6 +244,28 @@ class EntityHandler extends Plugin {
                             }
 
                             break;
+						case "latency":
+							{
+								const PlayerInfo = new PacketBuilder();
+
+								PlayerInfo.writeVarInt(0x36);
+								PlayerInfo.writeVarInt(2);
+								PlayerInfo.writeVarInt(1);
+								PlayerInfo.writeUUID(client.uuid);
+								PlayerInfo.writeVarInt(client.latency);
+
+								const clients = this.getClients();
+
+								for (const lClientID in clients) {
+									const lClient = clients[lClientID];
+
+									if (lClient.state === "GAME") {
+										lClient.socket.write(PlayerInfo.getResult());
+									}
+								}
+							}
+						
+							break;
                     }
                 });
 
@@ -286,13 +308,17 @@ class EntityHandler extends Plugin {
 
         const PlayerInfoRemove = new PacketBuilder();
 
-        PlayerInfoRemove.writeVarInt(0x00);
+        PlayerInfoRemove.writeVarInt(0x36);
+		PlayerInfoRemove.writeVarInt(4);
+		PlayerInfoRemove.writeVarInt(1);
+		PlayerInfoRemove.writeUUID(client.uuid);
 
         for (const lClientID in this.getClients()) {
             const lClient = this.getClients()[lClientID];
 
             if (lClient.state === "GAME" && lClient.id !== client.id) {
                 lClient.socket.write(EntityDestroy.getResult());
+				lClient.socket.write(PlayerInfoRemove.getResult());
             }
         }
     }

@@ -39,24 +39,7 @@ class KeepAliveHandler extends Plugin {
 
         client.keepAlive.lastKeepAlive = new Date().getTime();
 
-		const PacketBuilder = this.getPacketBuilder();
-		const PlayerInfo = new PacketBuilder();
-
-		PlayerInfo.writeVarInt(0x36);
-		PlayerInfo.writeVarInt(2);
-		PlayerInfo.writeVarInt(1);
-		PlayerInfo.writeUUID(client.uuid);
-		PlayerInfo.writeVarInt(client.latency);
-
-		const clients = this.getClients();
-
-		for (const lClientID in clients) {
-			const lClient = clients[lClientID];
-
-			if (lClient.state === "GAME") {
-				lClient.socket.write(PlayerInfo.getResult());
-			}
-		}
+		client.entity.updateTotal("latency");
     }
 
     handlePacket(packet) {
