@@ -335,12 +335,19 @@ class BufferUtils {
 		b.copy(this.buf, this.cursor);
 		this.cursor += b.length;
 	}
-	dataRemaining() {
+	
+	remainingData() {
 		return this.buf.slice(this.cursor);
 	}
+	
+	setCursor(length = 0) {
+		this.cursor = length;
+	}
+	
 	static concat(...BufferUtilss) {
 		return new BufferUtils(Buffer.concat(BufferUtilss.map((PB) => PB.buf)));
 	}
+	
 	get length() {
 		return this.buf.length;
 	}
