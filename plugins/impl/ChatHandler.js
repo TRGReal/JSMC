@@ -81,6 +81,19 @@ class ChatHandler extends Plugin {
 					ChatMessage.writeUUID("00000000-0000-0000-0000-000000000000");
 
 					client.socket.write(ChatMessage.getResult());
+				} else if (data.message === "/playertest") {
+					const SpawnPlayer = new PacketBuilder();
+					
+					SpawnPlayer.writeVarInt(0x04);
+					SpawnPlayer.writeVarInt(301);
+					SpawnPlayer.writeUUID("56825bf2-67f6-3755-b1bf-e6c96cad3411");
+					SpawnPlayer.writeDouble(1);
+					SpawnPlayer.writeDouble(6);
+					SpawnPlayer.writeDouble(1);
+					SpawnPlayer.write8(0);
+					SpawnPlayer.write8(0);
+					
+					client.socket.write(SpawnPlayer.getResult());
 				}
 			}
 		}

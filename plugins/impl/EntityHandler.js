@@ -251,8 +251,8 @@ class EntityHandler extends Plugin {
 								PlayerInfo.writeVarInt(0x36);
 								PlayerInfo.writeVarInt(2);
 								PlayerInfo.writeVarInt(1);
-								PlayerInfo.writeUUID(client.uuid);
-								PlayerInfo.writeVarInt(client.latency);
+								PlayerInfo.writeUUID(lClient.uuid);
+								PlayerInfo.writeVarInt(lClient.latency);
 
 								const clients = this.getClients();
 
@@ -359,8 +359,7 @@ class EntityHandler extends Plugin {
 
             // Entity Spawn Handler
             entities.forEach(entity => {
-				console.log(entity.username);
-                const SpawnPlayer = new PacketBuilder();
+				const SpawnPlayer = new PacketBuilder();
 
                 const position = entity.entity.getPosition();
                 const angle = entity.entity.getAngle();
