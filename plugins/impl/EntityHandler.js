@@ -63,14 +63,14 @@ class EntityHandler extends Plugin {
                 break;
             case "player_position_look":
                 client.entity.setPosition(data.x, data.y, data.z);
-                client.entity.setAngle(data.yaw % 360, data.pitch);
+                client.entity.setAngle(data.yaw % 180, data.pitch);
                 client.entity.setGround(data.onGround);
                 client.entity.updateTotal("position_angle");
                 client.entity.updateTotal("ground");
 
                 break;
             case "player_rotation":
-                client.entity.setAngle(data.yaw % 360, data.pitch);
+                client.entity.setAngle(data.yaw % 180, data.pitch);
                 client.entity.setGround(data.onGround);
                 client.entity.updateTotal("angle");
                 client.entity.updateTotal("ground");
@@ -146,11 +146,11 @@ class EntityHandler extends Plugin {
                                     EntityTeleport.writeDouble(nP.x);
                                     EntityTeleport.writeDouble(nP.y);
                                     EntityTeleport.writeDouble(nP.Z);
-                                    EntityTeleport.write8(angle.yaw);
-                                    EntityTeleport.write8(angle.pitch);
+                                    EntityTeleport.write8(Math.floor(angle.yaw * 255 / 360));
+                                    EntityTeleport.write8(Math.floor(angle.pitch * 255 / 360));
                                     EntityTeleport.writeBoolean(lClient.entity.onGround());
 
-                                    PacketQueue.push(EntityTeleport.getResult());
+                                    // PacketQueue.push(EntityTeleport.getResult());
                                 } else {
                                     const PositionPacket = new PacketBuilder();
 
@@ -161,7 +161,7 @@ class EntityHandler extends Plugin {
                                     PositionPacket.write16((nP.z * 32 - lP.z * 32) * 128);
                                     PositionPacket.writeBoolean(lClient.entity.onGround());
 
-                                    PacketQueue.push(PositionPacket.getResult());
+                                    // PacketQueue.push(PositionPacket.getResult());
                                 }
                             }
 
@@ -182,11 +182,11 @@ class EntityHandler extends Plugin {
                                     EntityTeleport.writeDouble(nP.x);
                                     EntityTeleport.writeDouble(nP.y);
                                     EntityTeleport.writeDouble(nP.Z);
-                                    EntityTeleport.write8(angle.yaw);
-                                    EntityTeleport.write8(angle.pitch);
+                                    EntityTeleport.write8(Math.floor(angle.yaw * 255 / 360));
+                                    EntityTeleport.write8(Math.floor(angle.pitch * 255 / 360));
                                     EntityTeleport.writeBoolean(lClient.entity.onGround());
 
-                                    PacketQueue.push(EntityTeleport.getResult());
+                                    // PacketQueue.push(EntityTeleport.getResult());
                                 } else {
                                     const PositionRotationPacket = new PacketBuilder();
 
@@ -195,11 +195,11 @@ class EntityHandler extends Plugin {
                                     PositionRotationPacket.write16((nP.x * 32 - lP.x * 32) * 128);
                                     PositionRotationPacket.write16((nP.y * 32 - lP.y * 32) * 128);
                                     PositionRotationPacket.write16((nP.z * 32 - lP.z * 32) * 128);
-                                    PositionRotationPacket.write8(angle.yaw);
-                                    PositionRotationPacket.write8(angle.pitch);
+                                    PositionRotationPacket.write8(Math.floor(angle.yaw * 255 / 360));
+                                    PositionRotationPacket.write8(Math.floor(angle.pitch * 255 / 360));
                                     PositionRotationPacket.writeBoolean(lClient.entity.onGround());
 
-                                    PacketQueue.push(PositionRotationPacket.getResult());
+                                    // PacketQueue.push(PositionRotationPacket.getResult());
                                 }
                             }
 
@@ -212,9 +212,15 @@ class EntityHandler extends Plugin {
 
                                 RotationPacket.writeVarInt(0x2B);
                                 RotationPacket.writeVarInt(lClient.id);
-                                RotationPacket.write8(angle.yaw);
-                                RotationPacket.write8(angle.pitch);
+                                RotationPacket.write8(Math.floor(angle.yaw * 255 / 360));
+                                RotationPacket.write8(Math.floor(angle.pitch * 255 / 360));
                                 RotationPacket.writeBoolean(lClient.entity.onGround());
+								
+								const TestPacket = new PacketBuilder();
+								
+								TestPacket.write8(Math.floor(angle.yaw * 255 / 360));
+								
+								console.log(TestPacket.buf);
 
                                 PacketQueue.push(RotationPacket.getResult());
                             }
@@ -332,13 +338,15 @@ class EntityHandler extends Plugin {
         if (entities.length > 0) {
             const PacketBuilder = this.getPacketBuilder();
             const PlayerInfoIntro = new PacketBuilder();
+			
+			console.log(entities.length);
 
             // Player Info Handler
             PlayerInfoIntro.writeVarInt(0x36);
             PlayerInfoIntro.writeVarInt(0);
             PlayerInfoIntro.writeVarInt(entities.length);
 
-            entities.forEach(entity => {
+            entities.forEach(entity => {				
                 PlayerInfoIntro.writeUUID(entity.uuid);
                 PlayerInfoIntro.writeString(entity.username);
                 PlayerInfoIntro.writeVarInt(entity.textureProperties.length);
@@ -354,8 +362,8 @@ class EntityHandler extends Plugin {
                 PlayerInfoIntro.writeVarInt(-1);
                 PlayerInfoIntro.writeBoolean(false); // has display name
             });
-
-            client.socket.write(PlayerInfoIntro.getResult());
+			
+			client.socket.write(PlayerInfoIntro.getResult());
 
             // Entity Spawn Handler
             entities.forEach(entity => {
@@ -370,8 +378,8 @@ class EntityHandler extends Plugin {
                 SpawnPlayer.writeDouble(position.x);
                 SpawnPlayer.writeDouble(position.y);
                 SpawnPlayer.writeDouble(position.z);
-                SpawnPlayer.write8(Math.floor(angle.yaw));
-                SpawnPlayer.write8(Math.floor(angle.pitch));
+                SpawnPlayer.write8(Math.floor(angle.pitch * 255 / 360));
+                SpawnPlayer.write8(Math.floor(angle.pitch * 255 / 360));
 
                 client.socket.write(SpawnPlayer.getResult());
             });
