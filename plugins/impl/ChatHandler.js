@@ -70,7 +70,7 @@ class ChatHandler extends Plugin {
 
 					const TextWith = new PChat.MessageBuilder();
 
-					TextWith.setTranslate("achievement.openInventory");
+					TextWith.setTranslate("advancements.nether.all_effects.title");
 
 					BuiltMessage.addWith(AdvancementWith);
 					BuiltMessage.addWith(TextWith);
@@ -81,19 +81,6 @@ class ChatHandler extends Plugin {
 					ChatMessage.writeUUID("00000000-0000-0000-0000-000000000000");
 
 					client.socket.write(ChatMessage.getResult());
-				} else if (data.message === "/playertest") {
-					const SpawnPlayer = new PacketBuilder();
-					
-					SpawnPlayer.writeVarInt(0x04);
-					SpawnPlayer.writeVarInt(301);
-					SpawnPlayer.writeUUID("56825bf2-67f6-3755-b1bf-e6c96cad3411");
-					SpawnPlayer.writeDouble(1);
-					SpawnPlayer.writeDouble(6);
-					SpawnPlayer.writeDouble(1);
-					SpawnPlayer.write8(0);
-					SpawnPlayer.write8(0);
-					
-					client.socket.write(SpawnPlayer.getResult());
 				}
 			}
 		}
@@ -105,7 +92,7 @@ class ChatHandler extends Plugin {
 
 		const builtMessage = new PChat.MessageBuilder();
 
-		builtMessage.setTranslate("multiplayer.player.quit");
+		builtMessage.setTranslate("multiplayer.player.left");
 		builtMessage.setColor("yellow");
 
 		const usernameWith = new PChat.MessageBuilder();

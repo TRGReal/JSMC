@@ -22,34 +22,13 @@ class EntityHandler extends Plugin {
             case "settings":
                 client.settings = data;
 
-                const EntityMetadata = new PacketBuilder();
-
-                EntityMetadata.writeVarInt(0x4D);
-                EntityMetadata.writeVarInt(client.id);
-
-                // Entity Info Bit Mask (fire, crouching, sprinting, etc...)
-                EntityMetadata.writeU8(0);
-                EntityMetadata.writeVarInt(0);
-                EntityMetadata.write8(0);
-
-                // Skin Parts
-                EntityMetadata.writeU8(17); // Player Displayed Skin Parts (index)
-                EntityMetadata.writeVarInt(0); // Byte (type)
-                EntityMetadata.write8(data.displayedSkinParts); // Skin Part Bit Mask
-
-                // Main Hand
-                EntityMetadata.writeU8(18);
-                EntityMetadata.writeVarInt(0);
-                EntityMetadata.write8(data.mainHand);
-
-                // Finishing Byte
-                EntityMetadata.writeU8(0xff);
+                const EntityMetadata = this.getEntityMetadata(client);
 
                 for (var eClientID in clients) {
                     const eClient = clients[eClientID];
 
                     if (eClient.state === "GAME") {
-                        eClient.socket.write(EntityMetadata.getResult());
+                        eClient.socket.write(EntityMetadata);
                     }
                 }
 
@@ -63,14 +42,14 @@ class EntityHandler extends Plugin {
                 break;
             case "player_position_look":
                 client.entity.setPosition(data.x, data.y, data.z);
-                client.entity.setAngle(data.yaw % 180, data.pitch);
+                client.entity.setAngle(wrapAngleTo180(data.yaw), data.pitch);
                 client.entity.setGround(data.onGround);
                 client.entity.updateTotal("position_angle");
                 client.entity.updateTotal("ground");
 
                 break;
             case "player_rotation":
-                client.entity.setAngle(data.yaw % 180, data.pitch);
+                client.entity.setAngle(wrapAngleTo180(data.yaw), data.pitch);
                 client.entity.setGround(data.onGround);
                 client.entity.updateTotal("angle");
                 client.entity.updateTotal("ground");
@@ -127,8 +106,9 @@ class EntityHandler extends Plugin {
 
             if (lClient.state === "GAME" && Object.keys(lClient.entity.getUpdateTotal()).length > 1) {
                 const PacketQueue = [];
+                const updateTotal = Object.keys(lClient.entity.getUpdateTotal());
 
-                Object.keys(lClient.entity.getUpdateTotal()).forEach(update => {
+                updateTotal.forEach(update => {
                     switch (update) {
                         case "position":
                             {
@@ -210,43 +190,31 @@ class EntityHandler extends Plugin {
 
                                 const angle = lClient.entity.getAngle();
 
+                                const fixedYaw = Math.floor(angle.yaw * 255 / 360);
+                                const fixedPitch = Math.floor(angle.pitch * 255 / 360);
+
                                 RotationPacket.writeVarInt(0x2B);
                                 RotationPacket.writeVarInt(lClient.id);
-                                RotationPacket.write8(Math.floor(angle.yaw * 255 / 360));
-                                RotationPacket.write8(Math.floor(angle.pitch * 255 / 360));
+                                RotationPacket.write8(fixedYaw);
+                                RotationPacket.write8(fixedPitch);
                                 RotationPacket.writeBoolean(lClient.entity.onGround());
 								
-								const TestPacket = new PacketBuilder();
-								
-								TestPacket.write8(Math.floor(angle.yaw * 255 / 360));
-								
-								console.log(TestPacket.buf);
+                                const EntityHeadLook = new PacketBuilder();
+
+                                EntityHeadLook.writeVarInt(0x3E);
+                                EntityHeadLook.writeVarInt(lClient.id);
+                                EntityHeadLook.write8(fixedYaw);
 
                                 PacketQueue.push(RotationPacket.getResult());
+                                PacketQueue.push(EntityHeadLook.getResult());
                             }
 
                             break;
                         case "metadata":
                             {
-                                const EntityMetadata = new PacketBuilder();
+                                const EntityMetadata = this.getEntityMetadata(lClient);
 
-                                EntityMetadata.writeVarInt(0x4D);
-                                EntityMetadata.writeVarInt(lClient.id);
-                                
-                                // Entity Info Bitmask
-                                let FlagBitmask = 0;
-
-                                if (lClient.entity.isOnFire()) FlagBitmask |= 0x01;
-                                if (lClient.entity.isSneaking()) FlagBitmask |= 0x02;
-                                if (lClient.entity.isSprinting()) FlagBitmask |= 0x08;
-
-                                EntityMetadata.writeU8(0);
-                                EntityMetadata.writeVarInt(0);
-                                EntityMetadata.write8(FlagBitmask);
-
-                                EntityMetadata.writeU8(0xff);
-
-                                PacketQueue.push(EntityMetadata.getResult());
+                                PacketQueue.push(EntityMetadata);
                             }
 
                             break;
@@ -274,6 +242,8 @@ class EntityHandler extends Plugin {
 							break;
                     }
                 });
+
+                if (updateTotal.includes("position") || updateTotal.includes("position_angle")) lClient.entity.resetLastPosition();
 
                 lClient.entity.resetUpdateTotal();
 
@@ -329,6 +299,48 @@ class EntityHandler extends Plugin {
         }
     }
 
+    getEntityMetadata(client) {
+        const PacketBuilder = this.getPacketBuilder();
+        const data = client.settings;
+        const EntityMetadata = new PacketBuilder();
+
+        EntityMetadata.writeVarInt(0x4D);
+        EntityMetadata.writeVarInt(client.id);
+
+        // Entity Info Bit Mask (fire, crouching, sprinting, etc...)
+        EntityMetadata.writeU8(0);
+        EntityMetadata.writeVarInt(0);
+        EntityMetadata.write8(0);
+
+        if (data) {
+            // Skin Parts
+            EntityMetadata.writeU8(17); // Player Displayed Skin Parts (index)
+            EntityMetadata.writeVarInt(0); // Byte (type)
+            EntityMetadata.write8(data.displayedSkinParts); // Skin Part Bit Mask
+
+            // Main Hand
+            EntityMetadata.writeU8(18);
+            EntityMetadata.writeVarInt(0);
+            EntityMetadata.write8(data.mainHand);
+        }
+
+        // Entity Info Bitmask
+        let FlagBitmask = 0;
+
+        if (client.entity.isOnFire()) FlagBitmask |= 0x01;
+        if (client.entity.isSneaking()) FlagBitmask |= 0x02;
+        if (client.entity.isSprinting()) FlagBitmask |= 0x08;
+
+        EntityMetadata.writeU8(0);
+        EntityMetadata.writeVarInt(0);
+        EntityMetadata.write8(FlagBitmask);
+
+        // Finishing Byte
+        EntityMetadata.writeU8(0xff);
+
+        return EntityMetadata.getResult();
+    }
+
     sendEntities(client, selectedEntities) {
         if (!selectedEntities) return this.sendEntities(client, Object.values(this.getClients()));
 
@@ -365,7 +377,7 @@ class EntityHandler extends Plugin {
 			
 			client.socket.write(PlayerInfoIntro.getResult());
 
-            // Entity Spawn Handler
+            // Entity Spawn Handler (must be sent after player info)
             entities.forEach(entity => {
 				const SpawnPlayer = new PacketBuilder();
 
@@ -381,11 +393,26 @@ class EntityHandler extends Plugin {
                 SpawnPlayer.write8(Math.floor(angle.pitch * 255 / 360));
                 SpawnPlayer.write8(Math.floor(angle.pitch * 255 / 360));
 
+                const EntityMetadata = this.getEntityMetadata(entity);
+
                 client.socket.write(SpawnPlayer.getResult());
+                client.socket.write(EntityMetadata);
             });
         }
     }
 
+}
+
+function wrapAngleTo180(num) {
+    let val = num % 360;
+
+    if (val >= 180) {
+        val -= 360;
+    } else if (val < -180) {
+        val += 360;
+    }
+
+    return val;
 }
 
 module.exports = EntityHandler;

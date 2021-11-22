@@ -47,13 +47,15 @@ class Entity {
     }
 
     setPosition(x, y, z) {
-        this.#lastX = this.#x;
-        this.#lastY = this.#y;
-        this.#lastZ = this.#z;
-
         this.#x = x;
         this.#y = y;
         this.#z = z;
+    }
+
+    resetLastPosition() {
+        this.#lastX = this.#x;
+        this.#lastY = this.#y;
+        this.#lastZ = this.#z;
     }
 
     setAngle(yaw, pitch) {
