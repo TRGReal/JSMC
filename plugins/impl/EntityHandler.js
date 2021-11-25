@@ -107,30 +107,23 @@ class EntityHandler extends Plugin {
             if (lClient.state === "GAME" && Object.keys(lClient.entity.getUpdateTotal()).length > 1) {
                 const PacketQueue = [];
                 const updateTotal = Object.keys(lClient.entity.getUpdateTotal());
+				
+				const lP = lClient.entity.getLastPosition();
+				const nP = lClient.entity.getPosition();
+				const angle = lClient.entity.getAngle();
+
+				// process.stdout.write(lClient.username + " has update total of ");
+				// console.log(updateTotal);
 
                 updateTotal.forEach(update => {
                     switch (update) {
                         case "position":
                             {
-                                const lP = lClient.entity.getLastPosition();
-                                const nP = lClient.entity.getPosition();
-
                                 // Send an Entity Teleport if the total distance is more than 8 or no change (for precision due to other positions being relative).
-                                if (((nP.x - lP.x) > 8 || (nP.y - lP.y) > 8 || (nP.z - lP.z) > 8) || ((nP.x - lP.x) === 0 || (nP.y - lP.y) === 0 || (nP.z - lP.z) === 0)) {
-                                    const EntityTeleport = new PacketBuilder();
+                                if ((Math.abs(nP.x - lP.x) > 8 || Math.abs(nP.y - lP.y) > 8 || Math.abs(nP.z - lP.z) > 8) || ((nP.x - lP.x) === 0 || (nP.y - lP.y) === 0 || (nP.z - lP.z) === 0)) {
+                                    const EntityTeleport = this.getEntityTeleport(lClient);
 
-                                    const angle = lClient.entity.getAngle();
-
-                                    EntityTeleport.writeVarInt(0x61);
-                                    EntityTeleport.writeVarInt(lClient.id);
-                                    EntityTeleport.writeDouble(nP.x);
-                                    EntityTeleport.writeDouble(nP.y);
-                                    EntityTeleport.writeDouble(nP.Z);
-                                    EntityTeleport.write8(Math.floor(angle.yaw * 255 / 360));
-                                    EntityTeleport.write8(Math.floor(angle.pitch * 255 / 360));
-                                    EntityTeleport.writeBoolean(lClient.entity.onGround());
-
-                                    // PacketQueue.push(EntityTeleport.getResult());
+                                    PacketQueue.push(EntityTeleport);
                                 } else {
                                     const PositionPacket = new PacketBuilder();
 
@@ -141,45 +134,42 @@ class EntityHandler extends Plugin {
                                     PositionPacket.write16((nP.z * 32 - lP.z * 32) * 128);
                                     PositionPacket.writeBoolean(lClient.entity.onGround());
 
-                                    // PacketQueue.push(PositionPacket.getResult());
+                                    PacketQueue.push(PositionPacket.getResult());
                                 }
                             }
 
                             break;
                         case "position_angle":
                             {
-                                const lP = lClient.entity.getLastPosition();
-                                const nP = lClient.entity.getPosition();
-                                const angle = lClient.entity.getAngle();
+                                if ((Math.abs(nP.x - lP.x) > 8 || Math.abs(nP.y - lP.y) > 8 || Math.abs(nP.z - lP.z) > 8) || ((nP.x - lP.x) === 0 || (nP.y - lP.y) === 0 || (nP.z - lP.z) === 0)) {
+									const EntityTeleport = this.getEntityTeleport(lClient);
 
-                                if ((nP.x - lP.x) > 8) {
-                                    const EntityTeleport = new PacketBuilder();
-
-                                    const angle = lClient.entity.getAngle();
-
-                                    EntityTeleport.writeVarInt(0x61);
-                                    EntityTeleport.writeVarInt(lClient.id);
-                                    EntityTeleport.writeDouble(nP.x);
-                                    EntityTeleport.writeDouble(nP.y);
-                                    EntityTeleport.writeDouble(nP.Z);
-                                    EntityTeleport.write8(Math.floor(angle.yaw * 255 / 360));
-                                    EntityTeleport.write8(Math.floor(angle.pitch * 255 / 360));
-                                    EntityTeleport.writeBoolean(lClient.entity.onGround());
-
-                                    // PacketQueue.push(EntityTeleport.getResult());
+                                    PacketQueue.push(EntityTeleport);
                                 } else {
                                     const PositionRotationPacket = new PacketBuilder();
-
+									
+									const newRel = {
+										"x": Math.floor(((nP.x * 32) - (lP.x * 32)) * 128),
+										"y": Math.floor(((nP.y * 32) - (lP.y * 32)) * 128),
+										"z": Math.floor(((nP.z * 32) - (lP.z * 32)) * 128)
+									};
+									
                                     PositionRotationPacket.writeVarInt(0x2A);
                                     PositionRotationPacket.writeVarInt(lClient.id);
-                                    PositionRotationPacket.write16((nP.x * 32 - lP.x * 32) * 128);
-                                    PositionRotationPacket.write16((nP.y * 32 - lP.y * 32) * 128);
-                                    PositionRotationPacket.write16((nP.z * 32 - lP.z * 32) * 128);
+                                    PositionRotationPacket.write16(newRel.x);
+                                    PositionRotationPacket.write16(newRel.y);
+                                    PositionRotationPacket.write16(newRel.z);
                                     PositionRotationPacket.write8(Math.floor(angle.yaw * 255 / 360));
                                     PositionRotationPacket.write8(Math.floor(angle.pitch * 255 / 360));
                                     PositionRotationPacket.writeBoolean(lClient.entity.onGround());
-
-                                    // PacketQueue.push(PositionRotationPacket.getResult());
+									
+									const EntityHeadLook = this.getEntityHeadLook(lClient);
+									
+									process.stdout.write("writing position rotation packet ");
+									console.log(newRel);
+									
+                                    PacketQueue.push(PositionRotationPacket.getResult());
+									PacketQueue.push(EntityHeadLook);
                                 }
                             }
 
@@ -187,8 +177,6 @@ class EntityHandler extends Plugin {
                         case "angle":
                             {
                                 const RotationPacket = new PacketBuilder();
-
-                                const angle = lClient.entity.getAngle();
 
                                 const fixedYaw = Math.floor(angle.yaw * 255 / 360);
                                 const fixedPitch = Math.floor(angle.pitch * 255 / 360);
@@ -199,14 +187,10 @@ class EntityHandler extends Plugin {
                                 RotationPacket.write8(fixedPitch);
                                 RotationPacket.writeBoolean(lClient.entity.onGround());
 								
-                                const EntityHeadLook = new PacketBuilder();
-
-                                EntityHeadLook.writeVarInt(0x3E);
-                                EntityHeadLook.writeVarInt(lClient.id);
-                                EntityHeadLook.write8(fixedYaw);
-
-                                PacketQueue.push(RotationPacket.getResult());
-                                PacketQueue.push(EntityHeadLook.getResult());
+                                const EntityHeadLook = this.getEntityHeadLook(lClient);
+								
+								PacketQueue.push(RotationPacket.getResult());
+								PacketQueue.push(EntityHeadLook);
                             }
 
                             break;
@@ -299,6 +283,19 @@ class EntityHandler extends Plugin {
         }
     }
 
+	getEntityHeadLook(client) {
+		const PacketBuilder = this.getPacketBuilder();
+		const EntityHeadLook = new PacketBuilder();
+		
+		const fixedYaw = Math.floor(client.entity.getAngle().yaw * 255 / 360);
+
+		EntityHeadLook.writeVarInt(0x3E);
+		EntityHeadLook.writeVarInt(client.id);
+		EntityHeadLook.write8(fixedYaw);
+
+		return EntityHeadLook.getResult();
+	}
+
     getEntityMetadata(client) {
         const PacketBuilder = this.getPacketBuilder();
         const data = client.settings;
@@ -340,6 +337,25 @@ class EntityHandler extends Plugin {
 
         return EntityMetadata.getResult();
     }
+	
+	getEntityTeleport(client) {
+		const PacketBuilder = this.getPacketBuilder();
+		const EntityTeleport = new PacketBuilder();
+
+		const pos = client.entity.getPosition();
+		const angle = client.entity.getAngle();
+
+		EntityTeleport.writeVarInt(0x61);
+		EntityTeleport.writeVarInt(client.id);
+		EntityTeleport.writeDouble(pos.x);
+		EntityTeleport.writeDouble(pos.y);
+		EntityTeleport.writeDouble(pos.z);
+		EntityTeleport.write8(Math.floor(angle.yaw * 255 / 360));
+		EntityTeleport.write8(Math.floor(angle.pitch * 255 / 360));
+		EntityTeleport.writeBoolean(client.entity.onGround());
+		
+		return EntityTeleport.getResult();
+	}
 
     sendEntities(client, selectedEntities) {
         if (!selectedEntities) return this.sendEntities(client, Object.values(this.getClients()));
@@ -350,8 +366,6 @@ class EntityHandler extends Plugin {
         if (entities.length > 0) {
             const PacketBuilder = this.getPacketBuilder();
             const PlayerInfoIntro = new PacketBuilder();
-			
-			console.log(entities.length);
 
             // Player Info Handler
             PlayerInfoIntro.writeVarInt(0x36);
@@ -390,7 +404,7 @@ class EntityHandler extends Plugin {
                 SpawnPlayer.writeDouble(position.x);
                 SpawnPlayer.writeDouble(position.y);
                 SpawnPlayer.writeDouble(position.z);
-                SpawnPlayer.write8(Math.floor(angle.pitch * 255 / 360));
+                SpawnPlayer.write8(Math.floor(angle.yaw * 255 / 360));
                 SpawnPlayer.write8(Math.floor(angle.pitch * 255 / 360));
 
                 const EntityMetadata = this.getEntityMetadata(entity);

@@ -133,6 +133,8 @@ const server = net.createServer(socket => {
 	socket.on("error", err => {
 		LogUtils.debug("Connection error from " + socket.remoteAddress + ".");
 
+		console.error(err);
+
 		socket.destroy();
 	});
 
