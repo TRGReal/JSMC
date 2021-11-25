@@ -61,22 +61,24 @@ class EntityHandler extends Plugin {
 
                 break;
             case "entity_action":
-                switch (data.actionId) {
-                    case 0:
-                        client.entity.setSneaking(true);
-                        break;
-                    case 1:
-                        client.entity.setSneaking(false);
-                        break;
-                    case 3:
-                        client.entity.setSprinting(true);
-                        break;
-                    case 4:
-                        client.entity.setSprinting(false);
-                        break;
-                }
+				if (data.entityId == client.id) {
+					switch (data.actionId) {
+						case 0:
+							client.entity.setSneaking(true);
+							break;
+						case 1:
+							client.entity.setSneaking(false);
+							break;
+						case 3:
+							client.entity.setSprinting(true);
+							break;
+						case 4:
+							client.entity.setSprinting(false);
+							break;
+					}
 
-                client.entity.updateTotal("metadata");
+					client.entity.updateTotal("metadata");
+				}
 
                 break;
             case "animation":
@@ -111,9 +113,6 @@ class EntityHandler extends Plugin {
 				const lP = lClient.entity.getLastPosition();
 				const nP = lClient.entity.getPosition();
 				const angle = lClient.entity.getAngle();
-
-				// process.stdout.write(lClient.username + " has update total of ");
-				// console.log(updateTotal);
 
                 updateTotal.forEach(update => {
                     switch (update) {
@@ -164,9 +163,6 @@ class EntityHandler extends Plugin {
                                     PositionRotationPacket.writeBoolean(lClient.entity.onGround());
 									
 									const EntityHeadLook = this.getEntityHeadLook(lClient);
-									
-									process.stdout.write("writing position rotation packet ");
-									console.log(newRel);
 									
                                     PacketQueue.push(PositionRotationPacket.getResult());
 									PacketQueue.push(EntityHeadLook);
@@ -297,17 +293,13 @@ class EntityHandler extends Plugin {
 	}
 
     getEntityMetadata(client) {
+		console.log("updating");
         const PacketBuilder = this.getPacketBuilder();
         const data = client.settings;
         const EntityMetadata = new PacketBuilder();
 
         EntityMetadata.writeVarInt(0x4D);
         EntityMetadata.writeVarInt(client.id);
-
-        // Entity Info Bit Mask (fire, crouching, sprinting, etc...)
-        EntityMetadata.writeU8(0);
-        EntityMetadata.writeVarInt(0);
-        EntityMetadata.write8(0);
 
         if (data) {
             // Skin Parts
@@ -328,9 +320,14 @@ class EntityHandler extends Plugin {
         if (client.entity.isSneaking()) FlagBitmask |= 0x02;
         if (client.entity.isSprinting()) FlagBitmask |= 0x08;
 
+		// Entity Info Bit Mask (fire, crouching, sprinting, etc...)
         EntityMetadata.writeU8(0);
         EntityMetadata.writeVarInt(0);
         EntityMetadata.write8(FlagBitmask);
+		
+		EntityMetadata.writeU8(6);
+		EntityMetadata.writeVarInt(18);
+		EntityMetadata.writeVarInt(client.entity.isSneaking() ? 5 : 0);
 
         // Finishing Byte
         EntityMetadata.writeU8(0xff);
