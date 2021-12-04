@@ -255,26 +255,28 @@ class EntityHandler extends Plugin {
     }
 
     onDisconnect(client) {
-        const PacketBuilder = this.getPacketBuilder();
-        const EntityDestroy = new PacketBuilder();
+        if (client.state === "GAME") {
+            const PacketBuilder = this.getPacketBuilder();
+            const EntityDestroy = new PacketBuilder();
 
-        EntityDestroy.writeVarInt(0x3A);
-        EntityDestroy.writeVarInt(1); // 1 entity to destroy
-        EntityDestroy.writeVarInt(client.id);
+            EntityDestroy.writeVarInt(0x3A);
+            EntityDestroy.writeVarInt(1); // 1 entity to destroy
+            EntityDestroy.writeVarInt(client.id);
 
-        const PlayerInfoRemove = new PacketBuilder();
+            const PlayerInfoRemove = new PacketBuilder();
 
-        PlayerInfoRemove.writeVarInt(0x36);
-		PlayerInfoRemove.writeVarInt(4);
-		PlayerInfoRemove.writeVarInt(1);
-		PlayerInfoRemove.writeUUID(client.uuid);
+            PlayerInfoRemove.writeVarInt(0x36);
+            PlayerInfoRemove.writeVarInt(4);
+            PlayerInfoRemove.writeVarInt(1);
+            PlayerInfoRemove.writeUUID(client.uuid);
 
-        for (const lClientID in this.getClients()) {
-            const lClient = this.getClients()[lClientID];
+            for (const lClientID in this.getClients()) {
+                const lClient = this.getClients()[lClientID];
 
-            if (lClient.state === "GAME" && lClient.id !== client.id) {
-                lClient.socket.write(EntityDestroy.getResult());
-				lClient.socket.write(PlayerInfoRemove.getResult());
+                if (lClient.state === "GAME" && lClient.id !== client.id) {
+                    lClient.socket.write(EntityDestroy.getResult());
+                    lClient.socket.write(PlayerInfoRemove.getResult());
+                }
             }
         }
     }
@@ -293,7 +295,6 @@ class EntityHandler extends Plugin {
 	}
 
     getEntityMetadata(client) {
-		console.log("updating");
         const PacketBuilder = this.getPacketBuilder();
         const data = client.settings;
         const EntityMetadata = new PacketBuilder();

@@ -15,6 +15,13 @@ class Entity {
     #onFire;
     #sneaking;
     #sprinting;
+	#health;
+	#food;
+	#foodSaturation;
+    #groundX;
+    #groundY;
+    #groundZ;
+    #groundUpdates;
 
     constructor(uuid, name, spawnPosition) {
         this.#uuid = uuid;
@@ -29,13 +36,22 @@ class Entity {
         this.#lastY = spawnPosition.y;
         this.#lastZ = spawnPosition.z;
 
+        this.#groundX = spawnPosition.x;
+        this.#groundY = spawnPosition.y;
+        this.#groundZ = spawnPosition.z;
+
         this.#yaw = spawnPosition.yaw;
         this.#pitch = spawnPosition.pitch;
 
         this.#onFire = false;
+		this.#health = 20;
+		this.#food = 20;
+		this.#foodSaturation = 5;
 
         this.#sneaking = false;
         this.#sprinting = false;
+
+        this.#groundUpdates = true;
     }
 
     getName() {
@@ -61,6 +77,16 @@ class Entity {
     setAngle(yaw, pitch) {
         this.#yaw = yaw;
         this.#pitch = pitch;
+    }
+
+    setGroundPosition() {
+        this.#groundX = this.#x;
+        this.#groundY = this.#y;
+        this.#groundZ = this.#z;
+    }
+
+    getGroundPosition() {
+        return { "x": this.#groundX, "y": this.#groundY, "z": this.#groundZ };
     }
 
     setGround(onGround) {
@@ -123,6 +149,42 @@ class Entity {
 
     isSprinting() {
         return this.#sprinting;
+    }
+
+    setHealth(health) {
+		this.#health = health;
+	}
+	
+	getHealth() {
+		return this.#health;
+	}
+	
+	getFood() {
+		return this.#food;
+	}
+	
+	setFood(amount) {
+		this.#food = amount;
+	}
+	
+	getFoodSaturation() {
+		return this.#foodSaturation;
+	}
+	
+	setFoodSaturation(saturation) {
+		this.#foodSaturation = saturation;
+	}
+    
+    getGroundUpdates() {
+        return this.#groundUpdates;
+    }
+
+    startGroundUpdates() {
+        this.#groundUpdates = true;
+    }
+
+    stopGroundUpdates() {
+        this.#groundUpdates = false;
     }
 
 }

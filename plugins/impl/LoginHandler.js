@@ -269,14 +269,20 @@ class LoginHandler extends Plugin {
 
                     for (let x = 0; x < 16; x++) {
                         for (let z = 0; z < 16; z++) {
-                            chunk.setBlockType(new Vec3(x, 5, z), 8);
-                            chunk.setBlockData(new Vec3(x, 5, z), 1);
-                            chunk.setBlockStateId(new Vec3(x, 4, z), 10);
-                            chunk.setBlockStateId(new Vec3(x, 3, z), 10);
+                            var random = Math.random() * 5;
+                            var noise = Math.abs(getNoise(x, z)) + Math.abs(getNoise(x, z)) * 7;
+                            //chunk.setBlockType(new Vec3(x, 5, z), 8);
+                            //chunk.setBlockData(new Vec3(x, 5, z), 1);
+                            for (var a = noise; a > 0; --a) {
+                            chunk.setBlockStateId(new Vec3(x, 1 + a, z), 2);
+                            //chunk.setBlockStateId(new Vec3(x, 3 + noise, z), 3);
+                            //chunk.setBlockStateId(new Vec3(x, 2 + noise, z), 3);
+                            chunk.setBlockStateId(new Vec3(x, a, z), 3);
+                            }
                             chunk.setBlockType(new Vec3(x, 2, z), 25);
 
                             for (let y = 0; y < 256; y++) {
-                                chunk.setSkyLight(new Vec3(x, y, z), 15);
+                                chunk.setSkyLight(new Vec3(x, y, z), Math.round(y / 18));
                             }
                         }
                     }
@@ -327,6 +333,7 @@ class LoginHandler extends Plugin {
                     this.getPluginLoader().onClientLogin(client);
 
     				this.getLogUtils().success(client.username + " has logged in. [time=" + client.joinDiff + "ms]");
+                
     			});
 
     			break;
@@ -338,6 +345,57 @@ class LoginHandler extends Plugin {
         }
     }
 
+}
+
+//credit to https://github.com/solvingcode/noisemap/blob/master/src/lib/NoiseGenerator.js
+function noise(x, z){
+    const integerX = parseInt(x)
+    const integerZ = parseInt(z)
+
+    const fractionalX = x - integerX
+    const fractionalZ = z - integerZ
+
+    const a = this.getNoise(integerX, integerZ)
+    const b = this.getNoise(integerX + 1, integerZ)
+
+    const c = this.getNoise(integerX, integerZ + 1)
+    const d = this.getNoise(integerX + 1, integerZ + 1)
+
+    const f = this.cosineInterpolate(a, b, fractionalX)
+    const g = this.cosineInterpolate(c, d, fractionalZ)
+
+    const result = this.cosineInterpolate(f, g, fractionalZ)
+
+    return result
+}
+
+function getNoiseValue(t){
+    t += 6910259012; //binary for mimikyuin
+    t = BigInt((t << 13) ^ t)
+    t = (t * (t * t * 15731n + 789221n) + 1376312589n)
+    t = parseInt(t.toString(2).slice(-31), 2)
+    return 1.0 - t / 1073741824
+}
+
+function getNoise(x, z){
+    return getNoiseValue(x + z * 16);
+}
+
+function cosineInterpolate(a, b, t){
+    const c = (1 - Math.cos(t * 3.1415927)) * .5
+    return (1. - c) * a + c * b
+}
+
+function perlinNoise(x, z){
+    var r = 0
+    for (var i = 0; i <= this.configs.octaves; i++) {
+        var frequency = Math.pow(2, i)
+        var amplitude = Math.pow(this.configs.persistance, i)
+        var noise = this.noise(x * frequency / this.configs.smoothness, z * frequency / this.configs.smoothness)
+        r += noise * amplitude
+    }
+    var result = (r / 2 + 1) * this.configs.amplitude - 20
+    return result > 0 ? result : 1
 }
 
 module.exports = LoginHandler;
