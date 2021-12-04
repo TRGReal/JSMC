@@ -267,17 +267,23 @@ class LoginHandler extends Plugin {
 
                     const chunk = new PChunk();
 
-                    for (let x = 0; x < 16; x++) {
-                        for (let z = 0; z < 16; z++) {
+                    for (let x = 0; x < 64; x++) {
+                        for (let z = 0; z < 64; z++) {
                             var random = Math.random() * 5;
                             var noise = Math.abs(getNoise(x, z)) + Math.abs(getNoise(x, z)) * 7;
                             //chunk.setBlockType(new Vec3(x, 5, z), 8);
                             //chunk.setBlockData(new Vec3(x, 5, z), 1);
                             for (var a = noise; a > 0; --a) {
                             chunk.setBlockStateId(new Vec3(x, 1 + a, z), 2);
+                            chunk.setBlockStateId(new Vec3(x + Math.round(x+z * 0.1), 1 + a + Math.round(x+z * 0.01), z + Math.round(x+z * 0.1)), 2);
+                            chunk.setBlockStateId(new Vec3(x + Math.round(x+z * 0.15), 1 + a + Math.round(x+z * 0.01), z + Math.round(x+z * 0.15)), 2);
+                            chunk.setBlockStateId(new Vec3(x + Math.round(x+z * 0.2), 1 + a + Math.round(x+z * 0.01), z + Math.round(x+z * 0.2)), 2);
                             //chunk.setBlockStateId(new Vec3(x, 3 + noise, z), 3);
                             //chunk.setBlockStateId(new Vec3(x, 2 + noise, z), 3);
-                            chunk.setBlockStateId(new Vec3(x, a, z), 3);
+                            chunk.setBlockStateId(new Vec3(x + 1, a, z), 2);
+                            chunk.setBlockStateId(new Vec3(x + 1, a, z + 1), 3);
+                            chunk.setBlockStateId(new Vec3(x + 1, a, z - 1), 3);
+                            chunk.setBlockStateId(new Vec3(x - 1, a, z + 1), 3);
                             }
                             chunk.setBlockType(new Vec3(x, 2, z), 25);
 
