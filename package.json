@@ -3,7 +3,7 @@
     "chalk": "^5.0.0",
     "node-rsa": "^1.1.1",
     "prismarine-chat": "^1.4.1",
-    "prismarine-chunk": "^1.26.0",
+    "prismarine-chunk": "^1.28.1",
     "prismarine-item": "^1.11.1",
     "prismarine-nbt": "^2.0.0",
     "uuid": "^8.3.2",
