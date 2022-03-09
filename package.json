@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "chalk": "^5.0.0",
+    "chalk": "^5.0.1",
     "node-rsa": "^1.1.1",
     "prismarine-chat": "^1.5.0",
     "prismarine-chunk": "^1.28.1",
