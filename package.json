@@ -9,6 +9,6 @@
     "prismarine-item": "^1.11.5",
     "prismarine-nbt": "^2.1.0",
     "uuid": "^8.3.2",
-    "yggdrasil": "^1.6.1"
+    "yggdrasil": "^1.7.0"
   }
 }
